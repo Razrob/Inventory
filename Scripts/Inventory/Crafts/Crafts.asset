@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84f5ddaa06c02564b80bddd47ad6c49a, type: 3}
+  m_Name: Crafts
+  m_EditorClassIdentifier: 
+  _craftRecipes:
+  - _receivedItem:
+      Item: {fileID: 3096619189773636768, guid: 8bdc656f27b7e524b8a5d8a0e44ac3a4,
+        type: 3}
+      ItemNumber: 1
+    _requiredItems:
+    - Item: {fileID: 3096619189773636768, guid: 4ce3b5dc33d51a64793a6acceadf45ba,
+        type: 3}
+      ItemNumber: 1
+    - Item: {fileID: 3096619189773636768, guid: fa7871ebd6b5c1b4f99cc977e0486d0f,
+        type: 3}
+      ItemNumber: 1
+  - _receivedItem:
+      Item: {fileID: 3096619189773636768, guid: 4deba4d220ff2324aaecf54b29ccb3c5,
+        type: 3}
+      ItemNumber: 1
+    _requiredItems:
+    - Item: {fileID: 3096619189773636768, guid: 4ce3b5dc33d51a64793a6acceadf45ba,
+        type: 3}
+      ItemNumber: 1
+    - Item: {fileID: 3096619189773636768, guid: fa7871ebd6b5c1b4f99cc977e0486d0f,
+        type: 3}
+      ItemNumber: 2
+  - _receivedItem:
+      Item: {fileID: 3096619189773636768, guid: fa7871ebd6b5c1b4f99cc977e0486d0f,
+        type: 3}
+      ItemNumber: 1
+    _requiredItems:
+    - Item: {fileID: 3096619189773636768, guid: 4ce3b5dc33d51a64793a6acceadf45ba,
+        type: 3}
+      ItemNumber: 2
+    - Item: {fileID: 3096619189773636768, guid: 8bdc656f27b7e524b8a5d8a0e44ac3a4,
+        type: 3}
+      ItemNumber: 2
