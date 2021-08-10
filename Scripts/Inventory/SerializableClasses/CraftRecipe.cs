@@ -13,9 +13,3 @@ public class CraftRecipe
     public CraftItemSet[] RequiredItems => _requiredItems;
 }
 
-[Serializable]
-public class CraftItemSet
-{
-    public Item Item;
-    public int ItemNumber;
-}

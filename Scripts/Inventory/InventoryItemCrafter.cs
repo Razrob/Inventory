@@ -12,7 +12,6 @@ public class InventoryItemCrafter : MonoBehaviour
 
     public void RefreshVisibleRecipes()
     {
-        Debug.Log(_craftsList.CraftRecipes.Length);
         for (int i = 0; i < _craftListTransform.childCount; i++) Destroy(_craftListTransform.GetChild(i).gameObject);
 
         foreach(CraftRecipe _recipe in _craftsList.CraftRecipes)

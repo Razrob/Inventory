@@ -12,24 +12,20 @@ public class CraftRecipeEditor : PropertyDrawer
         position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
         EditorGUI.indentLevel = 0;
 
-        Rect _receivedItemRect = new Rect(position.x, position.y, 40, position.height);
+        Rect _receivedItemRect = new Rect(position.x, position.y, 40, 18);
 
         EditorGUI.PropertyField(_receivedItemRect, property.FindPropertyRelative("ItemNumber"), GUIContent.none);
+
         Item _item = property.FindPropertyRelative("Item").objectReferenceValue as Item;
         if (_item != null)
         {
-            Material _material = new Material(Shader.Find("Standard"));
+            Material _material = new Material(Shader.Find("UI/Unlit/Transparent"));
             _material.mainTexture = _item.ItemSprite.texture;
-            _material.color = Color.white;
-
-
-            EditorGUI.DrawPreviewTexture(new Rect(_receivedItemRect.x + 45, _receivedItemRect.y, 20, _receivedItemRect.height), _item.ItemSprite.texture);
+            EditorGUI.DrawPreviewTexture(new Rect(_receivedItemRect.x + 45, _receivedItemRect.y, 18, _receivedItemRect.height), _item.ItemSprite.texture, _material);
         }
 
-        // EditorGUI.DrawTextureAlpha(new Rect(_receivedItemRect.x + 45, _receivedItemRect.y, 23, _receivedItemRect.height), _item.ItemSprite.texture);
+        EditorGUI.PropertyField(new Rect(_receivedItemRect.x + 70, _receivedItemRect.y, EditorGUIUtility.currentViewWidth - (_receivedItemRect.x + 90), 18), property.FindPropertyRelative("Item"), GUIContent.none);
 
-        EditorGUI.PropertyField(new Rect(_receivedItemRect.x + 75, _receivedItemRect.y, EditorGUIUtility.currentViewWidth - (_receivedItemRect.x + 60), _receivedItemRect.height), property.FindPropertyRelative("Item"), GUIContent.none);
-       // Debug.Log();
 
         EditorGUI.EndProperty();
     }

@@ -120,7 +120,7 @@ public class InventoryCellDragger : MonoBehaviour
         }
     }
 
-    public class FreeCellData
+    private class FreeCellData
     {
         public RectTransform CellRectTransform;
         public UICell EditableUICell;
