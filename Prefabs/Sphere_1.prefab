@@ -110,6 +110,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxCountInCell: 1
+  _itemName: Blue sphere
+  _itemDescription: 
   _itemID: sphere_1
   _itemSprite: {fileID: 21300000, guid: 2e4fdffd8ebeeee44963e1c36abc0f72, type: 3}
   _isWearable: 1

@@ -97,6 +97,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxCountInCell: 3
+  _itemName: Yellow cylinder
+  _itemDescription: 
   _itemID: cylinder_1
   _itemSprite: {fileID: 21300000, guid: 9cbac3a505887cd4c80ef28646aa8948, type: 3}
   _isWearable: 0

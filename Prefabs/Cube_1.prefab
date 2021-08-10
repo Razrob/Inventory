@@ -110,6 +110,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxCountInCell: 7
+  _itemName: Pink cube
+  _itemDescription: 
   _itemID: cube_1
   _itemSprite: {fileID: 21300000, guid: 7422e574391802e409e7b680ccf67aad, type: 3}
   _isWearable: 0
