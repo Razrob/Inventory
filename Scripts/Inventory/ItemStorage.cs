@@ -18,11 +18,18 @@ public class ItemStorage
         OnCellChanged += OnChanged;
     }
 
-   private void OnChanged(int _index, InventoryCell _cell)
+    private void OnChanged(int _index, InventoryCell _cell) => OnStorageChanged?.Invoke();
+
+    public bool CheckRecipeAvailability(CraftRecipe _recipe)
     {
-        OnStorageChanged?.Invoke();
+        if (_recipe == null) return false;
+        foreach (CraftItemSet itemSet in _recipe.RequiredItems)
+        {
+            if (ItemNumberInStorage(itemSet.Item.ItemID) < itemSet.ItemNumber) return false;
+        }
+        return true;
     }
-    
+
     public bool ContainsItemID(string _itemID)
     {
         foreach (InventoryCell cell in _cells) if (cell.CellID == _itemID) return true;

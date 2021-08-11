@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class InventoryHandler : MonoBehaviour
 {
@@ -9,17 +10,17 @@ public class InventoryHandler : MonoBehaviour
     [SerializeField] private Item[] items;
     [SerializeField] private int _storageCapacity = 16;
 
+    public event Action<bool> OnInventoryDisplayChanged;
 
     private ItemStorage _itemStorage;
-
     private bool _inventoryActive;
+
     public bool InventoryActive => _inventoryActive;
     public ItemStorage ItemStorage => _itemStorage; 
     public InventoryDisplay InventoryDisplay => _inventoryDisplay;
 
     private void Start()
     {
-
         _itemStorage = new ItemStorage(_storageCapacity);
 
         _itemStorage.OnCellChanged += _inventoryDisplay.UpdateInventoryCell;
@@ -27,7 +28,7 @@ public class InventoryHandler : MonoBehaviour
 
         for (int i = 0; i < 15; i++)
         {
-            AddItem(items[Random.Range(0, items.Length)]);
+            AddItem(items[UnityEngine.Random.Range(0, items.Length)]);
 
         }
     }
@@ -48,6 +49,11 @@ public class InventoryHandler : MonoBehaviour
         if (_enabled) Cursor.lockState = CursorLockMode.None;
         else Cursor.lockState = CursorLockMode.Locked;
         _inventoryActive = _enabled;
+
+        if (_inventoryActive) _inventoryItemCrafter.RefreshVisibleRecipes();
+        _inventoryDisplay.ResetActiveCraftListPage();
+
+        OnInventoryDisplayChanged?.Invoke(_enabled);
     }
 
     public bool AddItem(Item _item)
