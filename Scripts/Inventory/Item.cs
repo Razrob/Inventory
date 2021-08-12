@@ -25,8 +25,6 @@ public class Item : MonoBehaviour
     {
         if (_isWearable)
         {
-            
-            WearProgress = Random.Range(0, 1f);
             _maxCountInCell = 1;
         }
 

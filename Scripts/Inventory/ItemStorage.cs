@@ -20,6 +20,17 @@ public class ItemStorage
 
     private void OnChanged(int _index, InventoryCell _cell) => OnStorageChanged?.Invoke();
 
+    private void ReplaceCell(int _cellIndex, InventoryCell _inventoryCell)
+    {
+        _cells[_cellIndex] = _inventoryCell;
+        OnCellChanged?.Invoke(_cellIndex, _inventoryCell);
+    }
+    private void IncreaseItemNumberInCell(int _cellIndex, int _itemNumber)
+    {
+        _cells[_cellIndex].ItemNumber += _itemNumber;
+        OnCellChanged?.Invoke(_cellIndex, _cells[_cellIndex]);
+    }
+
     public bool CheckRecipeAvailability(CraftRecipe _recipe)
     {
         if (_recipe == null) return false;
@@ -30,16 +41,23 @@ public class ItemStorage
         return true;
     }
 
-    public bool ContainsItemID(string _itemID)
+    public Item CraftItem(CraftRecipe _recipe)
     {
-        foreach (InventoryCell cell in _cells) if (cell.CellID == _itemID) return true;
-        return false;
+        if(CheckRecipeAvailability(_recipe))
+        {
+            for(int i = 0; i < _recipe.RequiredItems.Length; i++)
+            {
+                for (int x = 0; x < _recipe.RequiredItems[i].ItemNumber; x++) GetItem(_recipe.RequiredItems[i].Item.ItemID);
+            }
+
+            return _recipe.ReceivedItem.Item;
+        }
+        return null;
     }
-    public bool ContainsItem(Item _item)
-    {
-        foreach (InventoryCell cell in _cells) if (cell.Item == _item) return true;
-        return false;
-    }
+
+    public bool ContainsItemID(string _itemID) => _cells.Exists((match) => { return match.CellID == _itemID; } );
+    public bool ContainsItem(Item _item) => _cells.Exists((match) => { return match.Item == _item; });
+    
     public int ItemNumberInCell(int _cellIndex)
     {
         if (_cellIndex >= _cells.Count) return -1;
@@ -55,36 +73,36 @@ public class ItemStorage
 
     public bool TryAddItem(Item _item)
     {
+
         for (int i = 0; i < _cells.Count; i++)
         {
-            if (_cells[i].CellID == string.Empty) _cells[i] = new InventoryCell(_item);
-            else if (_cells[i].CellID == _item.ItemID && _cells[i].ItemNumber < _cells[i].Item.MaxCountInCell) _cells[i].ItemNumber++;
+            if (_cells[i].CellID == string.Empty) ReplaceCell(i, new InventoryCell(_item));
+            else if (_cells[i].CellID == _item.ItemID && _cells[i].ItemNumber < _cells[i].Item.MaxCountInCell) IncreaseItemNumberInCell(i, 1);
             else continue;
 
-            OnCellChanged?.Invoke(i, _cells[i]);
-            return true;
-        }
-
-        if (_cells.Count < _maxCellNumber)
-        {
-            _cells.Add(new InventoryCell(_item));
-            OnCellChanged?.Invoke(_cells.Count - 1, _cells[_cells.Count - 1]);
             return true;
         }
 
         return false;
     }
 
-    public bool TryAddItemToSpecificCell(Item _item, int _cellIndex)
+    public int TryAddItemsToSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1) //returns number of not added items
     {
-        if (_cellIndex >= _maxCellNumber) return false;
+        if (_cellIndex >= _maxCellNumber) return _itemNumber;
 
-        if (_cells[_cellIndex].CellID == string.Empty) _cells[_cellIndex] = new InventoryCell(_item);
-        else if (_cells[_cellIndex].CellID == _item.ItemID && _cells[_cellIndex].ItemNumber < _item.MaxCountInCell) _cells[_cellIndex].ItemNumber++;
-        else return false;
+        if (_cells[_cellIndex].CellID == string.Empty)
+        {
+            ReplaceCell(_cellIndex, new InventoryCell(_item, _itemNumber));
+            return 0;
+        }
+        else if (_cells[_cellIndex].CellID == _item.ItemID && _cells[_cellIndex].ItemNumber < _item.MaxCountInCell)
+        {
+            int _addedItemNumber = Mathf.Min(_cells[_cellIndex].Item.MaxCountInCell - _cells[_cellIndex].ItemNumber, _itemNumber);
+            IncreaseItemNumberInCell(_cellIndex, _addedItemNumber);
+            return _itemNumber - _addedItemNumber;
 
-        OnCellChanged?.Invoke(_cellIndex, _cells[_cellIndex]);
-        return true;
+        }
+        else return _itemNumber;
 
     }
 

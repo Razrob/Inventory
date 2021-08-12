@@ -33,15 +33,55 @@ public class InventoryHandler : MonoBehaviour
         }
     }
 
+    private bool ContainsItemIdInItemsPool(string _itemID)
+    {
+        for(int i = 0; i < _itemsParent.childCount; i++)
+        {
+            if (_itemsParent.GetChild(i).GetComponent<Item>().ItemID == _itemID) return true;
+        }
+        return false;
+    }
+    private Item GetItemFromItemsPool(string _itemID)
+    {
+        for (int i = 0; i < _itemsParent.childCount; i++)
+        {
+            Item _item = _itemsParent.GetChild(i).GetComponent<Item>();
+            if (_item.ItemID == _itemID) return _item;
+        }
+        return null;
+    }
+
     private void CheckItemAvailability(ref Item _item)
     {
         if (!_item.IsWearable)
         {
-            if (_itemStorage.GetItemWithoutRemove(_item.ItemID) == null) _item = Instantiate(_item);
-            else _item = _itemStorage.GetItemWithoutRemove(_item.ItemID);
+            GameObject _oldItem = _item.gameObject;
+            if (!ContainsItemIdInItemsPool(_item.ItemID)) _item = Instantiate(_item);
+            else _item = GetItemFromItemsPool(_item.ItemID);
+            
+           if(_oldItem.activeInHierarchy) Destroy(_oldItem);
         }
         _item.transform.parent = _itemsParent;
         _item.gameObject.SetActive(false);
+        _item.gameObject.name = _item.ItemName;
+    }
+
+    private void CreateThrowedObject(Item _item)
+    {
+        GameObject _itemGameObject = _item.gameObject;
+        if (!_item.IsWearable) _itemGameObject = Instantiate(_item).gameObject;
+        else _itemGameObject.transform.parent = null;
+
+        _itemGameObject.name = _item.ItemName;
+
+        _itemGameObject.SetActive(true);
+        _itemGameObject.transform.position = transform.position;
+        _itemGameObject.GetComponent<Rigidbody>().AddForce((transform.forward + transform.up) * 3, ForceMode.Impulse);
+    }
+    public void ThrowItems(Item _item, int _itemNumber)
+    {
+        for(int i = 0; i < _itemNumber; i++) CreateThrowedObject(_item);
+        if (!_itemStorage.ContainsItemID(_item.ItemID) && !_item.IsWearable) Destroy(_item.gameObject);
     }
     public void SetInventoryDisplay(bool _enabled)
     {
@@ -56,20 +96,22 @@ public class InventoryHandler : MonoBehaviour
         OnInventoryDisplayChanged?.Invoke(_enabled);
     }
 
+
     public bool AddItem(Item _item)
     {
         CheckItemAvailability(ref _item);
         return _itemStorage.TryAddItem(_item);
     } 
 
-    public bool AddItemInSpecificCell(Item _item, int _cellIndex)
+    public int AddItemInSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1)
     {
         CheckItemAvailability(ref _item);
-        return _itemStorage.TryAddItemToSpecificCell(_item, _cellIndex);
+        return _itemStorage.TryAddItemsToSpecificCell(_item, _cellIndex, _itemNumber);
     }
 
     public Item GetItem(string _itemID)
     {
+        
         return _itemStorage.GetItem(_itemID);
     }
 

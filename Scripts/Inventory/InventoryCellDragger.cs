@@ -25,34 +25,19 @@ public class InventoryCellDragger : MonoBehaviour
     {
         if (_freeCellData != null) _freeCellData.CellRectTransform.position = Input.mousePosition;
     }
-    private void FinishDrag()
+    private void FinishMove()
     {
+        if (_freeCellData.InventoryCell.ItemNumber > 0) _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(_freeCellData.EditableUICell), _freeCellData.InventoryCell.ItemNumber);
+
         if (_freeCellData != null) Destroy(_freeCellData.FreeUICell.gameObject);
         _freeCellData = null;
     }
 
-    private void CancelItemMove()
-    {
-        for(int i = _freeCellData.InventoryCell.ItemNumber; i > 0; i--)
-        {
-            _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(_freeCellData.EditableUICell));
-        }
-        FinishDrag();
-    }
     private void ThrowItem()
     {
-        for (int i = _freeCellData.InventoryCell.ItemNumber; i > 0; i--)
-        {
-            GameObject _item = _freeCellData.InventoryCell.Item.gameObject;
-            if (!_freeCellData.InventoryCell.Item.IsWearable) _item = Instantiate(_freeCellData.InventoryCell.Item).gameObject;
-            _item.transform.position = _inventoryHandler.transform.position;
-            _item.transform.parent = null;
-            _item.SetActive(true);
-            _item.GetComponent<Rigidbody>().AddForce((_inventoryHandler.transform.forward + _inventoryHandler.transform.up) * 3, ForceMode.Impulse);
-        }
-        if(!_inventoryHandler.ItemStorage.ContainsItem(_freeCellData.InventoryCell.Item) && !_freeCellData.InventoryCell.Item.IsWearable) Destroy(_freeCellData.InventoryCell.Item.gameObject);
-
-        FinishDrag();
+        _inventoryHandler.ThrowItems(_freeCellData.InventoryCell.Item, _freeCellData.InventoryCell.ItemNumber);
+        _freeCellData.InventoryCell.ItemNumber = 0;
+        FinishMove();
     }
 
 
@@ -81,11 +66,12 @@ public class InventoryCellDragger : MonoBehaviour
             EditableUICell = _selectedCell,
             InventoryCell = new InventoryCell(_item)
         };
+        
         _freeCellData.InventoryCell.ItemNumber = _itemsNumber;
 
         _freeCellData.FreeUICell.ItemImage.sprite = _freeCellData.InventoryCell.Item.ItemSprite;
         if(_freeCellData.InventoryCell.ItemNumber > 1) _freeCellData.FreeUICell.ItemNumberUI.text = _freeCellData.InventoryCell.ItemNumber.ToString();
-        if (_freeCellData.InventoryCell.Item.IsWearable)
+        if (_freeCellData.InventoryCell.Item.IsWearable && _freeCellData.InventoryCell.Item.WearProgress < 1)
         {
             _freeCellData.FreeUICell.ItemWearProgressSlider.gameObject.SetActive(true);
             _freeCellData.FreeUICell.ItemWearProgressSlider.value = _freeCellData.InventoryCell.Item.WearProgress;
@@ -105,18 +91,9 @@ public class InventoryCellDragger : MonoBehaviour
         {
             if (_data.pointerCurrentRaycast.gameObject.TryGetComponent(out UICell cell))
             {
-                for (int i = _freeCellData.InventoryCell.ItemNumber; i > 0; i--)
-                {
-                    if (!_inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(cell)))
-                    {
-                        CancelItemMove();
-                        return;
-                    }
-                    else _freeCellData.InventoryCell.ItemNumber--;
-                }
-                FinishDrag();
+                _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(cell), _freeCellData.InventoryCell.ItemNumber);
             }
-            else CancelItemMove();
+            FinishMove();
         }
     }
 

@@ -16,4 +16,10 @@ public class InventoryCell
         CellID = _item.ItemID;
         ItemNumber = 1;
     }
+    public InventoryCell(Item _item, int _itemNumber)
+    {
+        Item = _item;
+        CellID = _item.ItemID;
+        ItemNumber = _itemNumber;
+    }
 }

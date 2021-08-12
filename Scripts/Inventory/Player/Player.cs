@@ -45,8 +45,8 @@ public class Player : MonoBehaviour
                 if (Physics.Raycast(_camera.ScreenPointToRay(new Vector2(_camera.pixelWidth / 2, _camera.pixelHeight / 2)), out hit, 5))
                 {
                     if (hit.transform.TryGetComponent(out Item _item))
-                    { 
-                        if(_inventoryHandler.AddItem(_item) && !_item.IsWearable) Destroy(_item.gameObject);
+                    {
+                        _inventoryHandler.AddItem(_item);
                     }
                 }
             }

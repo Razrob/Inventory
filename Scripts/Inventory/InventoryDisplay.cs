@@ -119,26 +119,28 @@ public class InventoryDisplay : MonoBehaviour
     }
     public void UpdateInventoryCell(int _cellIndex, InventoryCell _inventoryCell)
     {
+        
         if (_inventoryCell.ItemNumber > 0)
         {
             if (!_inventoryCell.Item.IsWearable) _inventoryCellsUI[_cellIndex].ItemNumberUI.text = _inventoryCell.ItemNumber.ToString();
-            else
+            else _inventoryCellsUI[_cellIndex].ItemNumberUI.text = string.Empty;
+
+            SetImage(_inventoryCellsUI[_cellIndex].ItemImage, _inventoryCell.Item.ItemSprite);
+
+            if (_inventoryCell.Item.IsWearable && _inventoryCell.Item.WearProgress < 1)
             {
-                _inventoryCellsUI[_cellIndex].ItemNumberUI.text = string.Empty;
-                _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.value = _inventoryCell.Item.WearProgress;
+                _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.gameObject.SetActive(true);
                 _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.fillRect.GetComponent<Image>().color = GetColorFromValue(_inventoryCell.Item.WearProgress);
+                _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.value = _inventoryCell.Item.WearProgress;
             }
-
-            if (_inventoryCell.ItemNumber < 2) SetImage(_inventoryCellsUI[_cellIndex].ItemImage, _inventoryCell.Item.ItemSprite);
-
-            _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.gameObject.SetActive(_inventoryCell.Item.IsWearable);
         }
         else
         {
             _inventoryCellsUI[_cellIndex].ItemNumberUI.text = string.Empty;
-            _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.gameObject.SetActive(false);
             SetImage(_inventoryCellsUI[_cellIndex].ItemImage);
+           _inventoryCellsUI[_cellIndex].ItemWearProgressSlider.gameObject.SetActive(false);
         }
+
     }
 
     public void DisplayRecipeInfoPanel(ref CraftRecipe _recipe, bool _recipeAvailability)
