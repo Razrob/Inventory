@@ -4,9 +4,9 @@ using System;
 
 public class InventoryHandler : MonoBehaviour
 {
+    [SerializeField] private ItemPool _itemPool;
     [SerializeField] private InventoryDisplay _inventoryDisplay;
     [SerializeField] private InventoryItemCrafter _inventoryItemCrafter;
-    [SerializeField] private Transform _itemsParent;
     [SerializeField] private Item[] items;
     [SerializeField] private int _storageCapacity = 16;
 
@@ -21,6 +21,7 @@ public class InventoryHandler : MonoBehaviour
 
     private void Start()
     {
+
         _itemStorage = new ItemStorage(_storageCapacity);
 
         _itemStorage.OnCellChanged += _inventoryDisplay.UpdateInventoryCell;
@@ -31,39 +32,6 @@ public class InventoryHandler : MonoBehaviour
             AddItem(items[UnityEngine.Random.Range(0, items.Length)]);
 
         }
-    }
-
-    private bool ContainsItemIdInItemsPool(string _itemID)
-    {
-        for(int i = 0; i < _itemsParent.childCount; i++)
-        {
-            if (_itemsParent.GetChild(i).GetComponent<Item>().ItemID == _itemID) return true;
-        }
-        return false;
-    }
-    private Item GetItemFromItemsPool(string _itemID)
-    {
-        for (int i = 0; i < _itemsParent.childCount; i++)
-        {
-            Item _item = _itemsParent.GetChild(i).GetComponent<Item>();
-            if (_item.ItemID == _itemID) return _item;
-        }
-        return null;
-    }
-
-    private void CheckItemAvailability(ref Item _item)
-    {
-        if (!_item.IsWearable)
-        {
-            GameObject _oldItem = _item.gameObject;
-            if (!ContainsItemIdInItemsPool(_item.ItemID)) _item = Instantiate(_item);
-            else _item = GetItemFromItemsPool(_item.ItemID);
-            
-           if(_oldItem.activeInHierarchy) Destroy(_oldItem);
-        }
-        _item.transform.parent = _itemsParent;
-        _item.gameObject.SetActive(false);
-        _item.gameObject.name = _item.ItemName;
     }
 
     private void CreateThrowedObject(Item _item)
@@ -81,7 +49,7 @@ public class InventoryHandler : MonoBehaviour
     public void ThrowItems(Item _item, int _itemNumber)
     {
         for(int i = 0; i < _itemNumber; i++) CreateThrowedObject(_item);
-        if (!_itemStorage.ContainsItemID(_item.ItemID) && !_item.IsWearable) Destroy(_item.gameObject);
+        _itemPool.GetItem(_item);
     }
     public void SetInventoryDisplay(bool _enabled)
     {
@@ -96,28 +64,37 @@ public class InventoryHandler : MonoBehaviour
         OnInventoryDisplayChanged?.Invoke(_enabled);
     }
 
+    public Item CraftItem(CraftRecipe _recipe)
+    {
+        Item _item = _itemStorage.CraftItem(_recipe); 
+        foreach (CraftItemSet _itemSet in _recipe.RequiredItems) _itemPool.GetItem(_itemSet.Item);
+        return _item;
+    }
 
     public bool AddItem(Item _item)
     {
-        CheckItemAvailability(ref _item);
+        _itemPool.AddItem(ref _item);
         return _itemStorage.TryAddItem(_item);
     } 
 
     public int AddItemInSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1)
     {
-        CheckItemAvailability(ref _item);
+        _itemPool.AddItem(ref _item);
         return _itemStorage.TryAddItemsToSpecificCell(_item, _cellIndex, _itemNumber);
     }
 
     public Item GetItem(string _itemID)
     {
-        
-        return _itemStorage.GetItem(_itemID);
+        Item _item = _itemStorage.GetItem(_itemID);
+        _itemPool.GetItem(_item);
+        return _item;
     }
 
-    public Item GetItemInSpecificCell(int _cellIndex)
+    public Item GetItemFromSpecificCell(int _cellIndex)
     {
-        return _itemStorage.GetItemFromSpecificCell(_cellIndex);
+        Item _item = _itemStorage.GetItemFromSpecificCell(_cellIndex);
+        _itemPool.GetItem(_item);
+        return _item;
     }
 
     public Item GetAllItemsFromSpecificCell(int _cellIndex, out int _itemsNumber)

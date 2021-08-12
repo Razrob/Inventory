@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[System.Serializable]
 public class Item : MonoBehaviour
 {
     [SerializeField] private int _maxCountInCell;

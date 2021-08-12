@@ -27,16 +27,14 @@ public class InventoryItemCrafter : MonoBehaviour
     private void Start()
     {
         _inventoryHandler.OnInventoryDisplayChanged += (_enabled) => { if (!_enabled) _activeRecipe = null; };
+
+        InputModule.InputModuleInstance.OnMouseButtonUp += PutCraftedItem;
+        InputModule.InputModuleInstance.OnMouseButtonDrag += Drag;
     }
 
-    private void Update()
+    private void Drag(PointerEventData _data)
     {
-        if (_freeCellData != null) Drag();
-    }
-
-    private void Drag()
-    {
-        if(_freeCellData.RectTransform != null) _freeCellData.RectTransform.position = Input.mousePosition;
+        if(_freeCellData != null) _freeCellData.RectTransform.position = _data.position;
     }
 
     private void AddCellToCraftList(CraftRecipe _recipe)
@@ -61,6 +59,40 @@ public class InventoryItemCrafter : MonoBehaviour
 
         trigger.triggers[0].callback.AddListener((data) => SelectRecipe(data));
 
+    }
+
+    private void PutCraftedItem(BaseEventData _eventData)
+    {
+        PointerEventData _data = (PointerEventData)_eventData;
+
+        if (_freeCellData == null) return;
+
+        if (_data.pointerCurrentRaycast.gameObject == null) ThrowItems();
+        else
+        {
+            if (_data.pointerCurrentRaycast.gameObject.TryGetComponent(out UICell cell))
+            {
+                int _cellIndex = _inventoryDisplay.GetCellIndexInArray(cell);
+                if (_cellIndex == -1) ThrowItems();
+                else
+                {
+                    _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _cellIndex, _freeCellData.InventoryCell.ItemNumber);
+                    if (_freeCellData.InventoryCell.ItemNumber > 0) ThrowItems();
+                }
+            }
+            else ThrowItems();
+        }
+        FinishMove();
+
+    }
+    private void ThrowItems()
+    {
+        _inventoryHandler.ThrowItems(_freeCellData.InventoryCell.Item, _freeCellData.InventoryCell.ItemNumber);
+    }
+    private void FinishMove()
+    {
+        if (_freeCellData != null) Destroy(_freeCellData.UICell.gameObject);
+        _freeCellData = null;
     }
 
     public void RefreshVisibleRecipes()
@@ -108,7 +140,7 @@ public class InventoryItemCrafter : MonoBehaviour
 
         _freeCellData = new FreeCellData
         {
-            InventoryCell = new InventoryCell(Instantiate(_inventoryHandler.ItemStorage.CraftItem(_activeRecipe))),
+            InventoryCell = new InventoryCell(Instantiate(_inventoryHandler.CraftItem(_activeRecipe))),
             UICell = _freeCellTransform.GetComponent<UICell>(),
             RectTransform = _freeCellTransform.GetComponent<RectTransform>()
         };
@@ -116,41 +148,6 @@ public class InventoryItemCrafter : MonoBehaviour
         if (!_freeCellData.InventoryCell.Item.IsWearable && _freeCellData.InventoryCell.ItemNumber > 1) _freeCellData.UICell.ItemNumberUI.text = _freeCellData.InventoryCell.ItemNumber.ToString();
         _freeCellData.UICell.ItemImage.sprite = _freeCellData.InventoryCell.Item.ItemSprite;
 
-    }
-
-    public void PutCraftedItem(BaseEventData _eventData)
-    {
-        PointerEventData _data = (PointerEventData)_eventData;
-
-        if (_freeCellData == null) return;
-
-        if (_data.pointerCurrentRaycast.gameObject == null) ThrowItems();
-        else
-        {
-            if (_data.pointerCurrentRaycast.gameObject.TryGetComponent(out UICell cell))
-            {
-                int _cellIndex = _inventoryDisplay.GetCellIndexInArray(cell);
-                if (_cellIndex == -1) ThrowItems();
-                else
-                {
-                    _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _cellIndex, _freeCellData.InventoryCell.ItemNumber);
-                    if (_freeCellData.InventoryCell.ItemNumber > 0) ThrowItems();
-                }
-            }
-            else ThrowItems();
-        }
-
-        FinishMove();
-
-    }
-    private void ThrowItems()
-    {
-        _inventoryHandler.ThrowItems(_freeCellData.InventoryCell.Item, _freeCellData.InventoryCell.ItemNumber);
-    }
-    private void FinishMove()
-    {
-        if (_freeCellData != null) Destroy(_freeCellData.UICell.gameObject);
-        _freeCellData = null;
     }
 
     private class FreeCellData

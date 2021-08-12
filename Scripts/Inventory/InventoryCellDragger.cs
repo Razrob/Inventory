@@ -16,14 +16,14 @@ public class InventoryCellDragger : MonoBehaviour
 
     private FreeCellData _freeCellData;
 
-    private void Update()
+
+    private void Start()
     {
-        if (_freeCellData != null) Drag();
-        
+        InputModule.InputModuleInstance.OnMouseButtonDrag += Drag;    
     }
-    private void Drag()
+    private void Drag(PointerEventData _data)
     {
-        if (_freeCellData != null) _freeCellData.CellRectTransform.position = Input.mousePosition;
+        if (_freeCellData != null) _freeCellData.CellRectTransform.position = _data.position;
     }
     private void FinishMove()
     {
@@ -41,7 +41,7 @@ public class InventoryCellDragger : MonoBehaviour
     }
 
 
-    public void PointerDown(BaseEventData _eventData)
+    public void TakeItem(BaseEventData _eventData)
     {
         PointerEventData _data = (PointerEventData)_eventData;
 
@@ -54,8 +54,8 @@ public class InventoryCellDragger : MonoBehaviour
 
         int _itemsNumber = 1;
 
-        if (_data.button == _buttonForMoveStackItems) _item = _inventoryHandler.GetAllItemsFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell), out _itemsNumber);
-        else _item = _inventoryHandler.GetItemInSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell));
+        if (_data.button == _buttonForMoveStackItems) _item = _inventoryHandler.ItemStorage.GetAllItemsFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell), out _itemsNumber);
+        else _item = _inventoryHandler.ItemStorage.GetItemFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell));
 
         Transform _freeCellTransform = Instantiate(_draggingCellPrefab, _data.position, Quaternion.identity, transform).transform;
 
@@ -81,7 +81,7 @@ public class InventoryCellDragger : MonoBehaviour
 
 
     
-    public void PointerUp(BaseEventData _eventData)
+    public void PutItem(BaseEventData _eventData)
     {
         if (_freeCellData == null) return;
         PointerEventData _data = (PointerEventData)_eventData;
