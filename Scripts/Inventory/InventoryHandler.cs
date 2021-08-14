@@ -4,6 +4,8 @@ using System;
 
 public class InventoryHandler : MonoBehaviour
 {
+    [SerializeField] private InventoryProperty _inventoryProperty;
+
     [SerializeField] private ItemPool _itemPool;
     [SerializeField] private InventoryDisplay _inventoryDisplay;
     [SerializeField] private InventoryItemCrafter _inventoryItemCrafter;
@@ -18,20 +20,22 @@ public class InventoryHandler : MonoBehaviour
     public bool InventoryActive => _inventoryActive;
     public ItemStorage ItemStorage => _itemStorage; 
     public InventoryDisplay InventoryDisplay => _inventoryDisplay;
+    public InventoryProperty InventoryProperty => _inventoryProperty;
 
-    private void Start()
-    {
+
+    private void Awake()
+    { 
 
         _itemStorage = new ItemStorage(_storageCapacity);
 
         _itemStorage.OnCellChanged += _inventoryDisplay.UpdateInventoryCell;
         _itemStorage.OnStorageChanged += _inventoryItemCrafter.RefreshVisibleRecipes;
 
-        for (int i = 0; i < 15; i++)
-        {
-            AddItem(items[UnityEngine.Random.Range(0, items.Length)]);
-
-        }
+        //for (int i = 0; i < 15; i++)
+        //{
+        //    TryAddItems(items[UnityEngine.Random.Range(0, items.Length)]);
+        //}
+        //TryAddItems(items[UnityEngine.Random.Range(0, items.Length)], 23);
     }
 
     private void CreateThrowedObject(Item _item)
@@ -48,8 +52,9 @@ public class InventoryHandler : MonoBehaviour
     }
     public void ThrowItems(Item _item, int _itemNumber)
     {
+        if (_item == null) return;
         for(int i = 0; i < _itemNumber; i++) CreateThrowedObject(_item);
-        _itemPool.GetItem(_item);
+        _itemPool.ExtractItem(_item);
     }
     public void SetInventoryDisplay(bool _enabled)
     {
@@ -67,38 +72,46 @@ public class InventoryHandler : MonoBehaviour
     public Item CraftItem(CraftRecipe _recipe)
     {
         Item _item = _itemStorage.CraftItem(_recipe); 
-        foreach (CraftItemSet _itemSet in _recipe.RequiredItems) _itemPool.GetItem(_itemSet.Item);
+        foreach (CraftItemSet _itemSet in _recipe.RequiredItems) _itemPool.ExtractItem(_itemSet.Item);
+        return _item;
+    }
+    public Item CraftAllItems(CraftRecipe _recipe, out int _itemNumber)
+    {
+        Item _item = _itemStorage.CraftAllItems(_recipe, out _itemNumber);
+        foreach (CraftItemSet _itemSet in _recipe.RequiredItems) _itemPool.ExtractItem(_itemSet.Item);
         return _item;
     }
 
-    public bool AddItem(Item _item)
+    public int TryAddItems(Item _item, int _itemNumber = 1)
     {
-        _itemPool.AddItem(ref _item);
-        return _itemStorage.TryAddItem(_item);
+        _itemPool.AppendItem(ref _item);
+        return _itemStorage.TryAddItems(_item, _itemNumber);
     } 
 
-    public int AddItemInSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1)
+    public int TryAddItemInSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1)
     {
-        _itemPool.AddItem(ref _item);
+        _itemPool.AppendItem(ref _item);
         return _itemStorage.TryAddItemsToSpecificCell(_item, _cellIndex, _itemNumber);
     }
 
     public Item GetItem(string _itemID)
     {
         Item _item = _itemStorage.GetItem(_itemID);
-        _itemPool.GetItem(_item);
+        _itemPool.ExtractItem(_item);
         return _item;
     }
 
     public Item GetItemFromSpecificCell(int _cellIndex)
     {
         Item _item = _itemStorage.GetItemFromSpecificCell(_cellIndex);
-        _itemPool.GetItem(_item);
+        _itemPool.ExtractItem(_item);
         return _item;
     }
 
     public Item GetAllItemsFromSpecificCell(int _cellIndex, out int _itemsNumber)
     {
-        return _itemStorage.GetAllItemsFromSpecificCell(_cellIndex, out _itemsNumber);
+        Item _item = _itemStorage.GetAllItemsFromSpecificCell(_cellIndex, out _itemsNumber);
+        _itemPool.ExtractItem(_item);
+        return _item;
     }
 }

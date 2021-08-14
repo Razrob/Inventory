@@ -10,13 +10,12 @@ public class ItemPool : MonoBehaviour
     private List<Item> _items = new List<Item>();
 
 
-
     private bool ContainsItemId(string _itemID) => _items.Exists((_item) => { return _item.ItemID == _itemID; });
     private Item GetItemFromPool(string _itemID) => _items.Find((_item) => { return _item.ItemID == _itemID; });
 
-
-    public void AddItem(ref Item _item)
+    public void AppendItem(ref Item _item)
     {
+        if (_item == null) return;
         if (!_item.IsWearable)
         {
             GameObject _oldItem = _item.gameObject;
@@ -35,8 +34,9 @@ public class ItemPool : MonoBehaviour
         _item.gameObject.name = _item.ItemName;
     }
 
-    public void GetItem(Item _item)
+    public void ExtractItem(Item _item)
     {
+        if (_item == null) return;
         if (!_inventoryHandler.ItemStorage.ContainsItemID(_item.ItemID) && !_item.IsWearable)
         {
             _item = GetItemFromPool(_item.ItemID);

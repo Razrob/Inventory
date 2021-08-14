@@ -14,6 +14,7 @@ public class InputModule : MonoBehaviour
     public event Action<PointerEventData> OnMouseButtonUp;
     public event Action<PointerEventData> OnMouseButtonDown;
     public event Action<PointerEventData> OnMouseButtonDrag;
+    public event Action<int> OnMouseScroll;
 
     private void Awake()
     {
@@ -29,7 +30,7 @@ public class InputModule : MonoBehaviour
             if (_eventSystem.currentInputModule.input.GetMouseButtonUp(i)) OnMouseButtonUp?.Invoke(GetEventData(_eventSystem.currentInputModule.input.mousePosition, (PointerEventData.InputButton)Enum.GetValues(typeof(PointerEventData.InputButton)).GetValue(i)));
             if (_eventSystem.currentInputModule.input.GetMouseButton(i)) OnMouseButtonDrag?.Invoke(GetEventData(_eventSystem.currentInputModule.input.mousePosition, (PointerEventData.InputButton)Enum.GetValues(typeof(PointerEventData.InputButton)).GetValue(i)));
         }
-
+        if (_eventSystem.currentInputModule.input.mouseScrollDelta != Vector2.zero) OnMouseScroll?.Invoke((int)_eventSystem.currentInputModule.input.mouseScrollDelta.y);
     }
 
     private PointerEventData GetEventData(Vector2 _position, PointerEventData.InputButton _inputButton)

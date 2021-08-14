@@ -20,6 +20,10 @@ public class InventoryDisplay : MonoBehaviour
 
     private bool _inventoryDisplay;
 
+    public int ActivePageIndex => _activePageIndex;
+
+    public event Action<int> OnCraftListPageChanged;
+
     private void SetImage(Image _image, Sprite _sprite = null)
     {
         if (_sprite == null) _image.color = new Color(_image.color.r, _image.color.g, _image.color.b, 0);
@@ -92,6 +96,8 @@ public class InventoryDisplay : MonoBehaviour
         _activePageIndex += _indexOffcet;
         _craftListPages[_activePageIndex].gameObject.SetActive(true);
         UpdatePageCounterDisplay();
+
+        OnCraftListPageChanged?.Invoke(_activePageIndex);
     }
 
     public void AddCraftListPage(Transform _page)

@@ -20,15 +20,18 @@ public class ItemStorage
 
     private void OnChanged(int _index, InventoryCell _cell) => OnStorageChanged?.Invoke();
 
-    private void ReplaceCell(int _cellIndex, InventoryCell _inventoryCell)
+    private int ReplaceCell(int _cellIndex, InventoryCell _inventoryCell)
     {
         _cells[_cellIndex] = _inventoryCell;
         OnCellChanged?.Invoke(_cellIndex, _inventoryCell);
+        return _inventoryCell.ItemNumber;
     }
-    private void IncreaseItemNumberInCell(int _cellIndex, int _itemNumber)
+    private int ChangeItemNumberInCell(int _cellIndex, int _itemNumber)
     {
         _cells[_cellIndex].ItemNumber += _itemNumber;
+        if (_cells[_cellIndex].ItemNumber < 1) _cells[_cellIndex] = new InventoryCell();
         OnCellChanged?.Invoke(_cellIndex, _cells[_cellIndex]);
+        return _itemNumber;
     }
 
     public bool CheckRecipeAvailability(CraftRecipe _recipe)
@@ -54,6 +57,20 @@ public class ItemStorage
         }
         return null;
     }
+    public Item CraftAllItems(CraftRecipe _recipe, out int _itemNumber)
+    {
+        _itemNumber = 0;
+        int _maxNumber = _recipe.ReceivedItem.Item.MaxCountInCell;
+        Item _item = null;
+        while (CheckRecipeAvailability(_recipe) && _maxNumber > 0)
+        {
+            _item = CraftItem(_recipe);
+            _itemNumber++;
+            _maxNumber--;
+        }
+        return _item;
+
+    }
 
     public bool ContainsItemID(string _itemID) => _cells.Exists((match) => { return match.CellID == _itemID; } );
     public bool ContainsItem(Item _item) => _cells.Exists((match) => { return match.Item == _item; });
@@ -71,20 +88,26 @@ public class ItemStorage
         return _number;
     }
 
-    public bool TryAddItem(Item _item)
+    public int TryAddItems(Item _item, int _itemNumber = 1) //returns number of not added items
     {
-
+        int _addedItemNumber = 0;
         for (int i = 0; i < _cells.Count; i++)
         {
-            if (_cells[i].CellID == string.Empty) ReplaceCell(i, new InventoryCell(_item));
-            else if (_cells[i].CellID == _item.ItemID && _cells[i].ItemNumber < _cells[i].Item.MaxCountInCell) IncreaseItemNumberInCell(i, 1);
-            else continue;
+            if (_addedItemNumber >= _itemNumber) return 0;
 
-            return true;
+            if (_cells[i].CellID == string.Empty)
+            {
+                _addedItemNumber += ReplaceCell(i, new InventoryCell(_item, Mathf.Min(_itemNumber - _addedItemNumber, _item.MaxCountInCell)));
+            }
+            else if (_cells[i].CellID == _item.ItemID && _cells[i].ItemNumber < _cells[i].Item.MaxCountInCell)
+            {
+                _addedItemNumber += ChangeItemNumberInCell(i, Mathf.Min(_itemNumber - _addedItemNumber, _item.MaxCountInCell - _cells[i].ItemNumber));
+            }
         }
 
-        return false;
+        return _itemNumber - _addedItemNumber;
     }
+
 
     public int TryAddItemsToSpecificCell(Item _item, int _cellIndex, int _itemNumber = 1) //returns number of not added items
     {
@@ -98,9 +121,8 @@ public class ItemStorage
         else if (_cells[_cellIndex].CellID == _item.ItemID && _cells[_cellIndex].ItemNumber < _item.MaxCountInCell)
         {
             int _addedItemNumber = Mathf.Min(_cells[_cellIndex].Item.MaxCountInCell - _cells[_cellIndex].ItemNumber, _itemNumber);
-            IncreaseItemNumberInCell(_cellIndex, _addedItemNumber);
+            ChangeItemNumberInCell(_cellIndex, _addedItemNumber);
             return _itemNumber - _addedItemNumber;
-
         }
         else return _itemNumber;
 
@@ -112,53 +134,35 @@ public class ItemStorage
         {
             if (_cells[i].CellID == _itemID)
             {
-                _cells[i].ItemNumber--;
-                if (_cells[i].ItemNumber < 1) _cells[i] = new InventoryCell();
+                ChangeItemNumberInCell(i, -1);
+                return _cells[i].Item;
             }
-            else continue;
-
-            OnCellChanged?.Invoke(i, _cells[i]);
-            return _cells[i].Item;
         }
 
         return null;
     }
-    public Item GetItemWithoutRemove(string _itemID)
-    {
-        for (int i = 0; i < _cells.Count; i++)
-        {
-            if (_cells[i].CellID == _itemID) return _cells[i].Item;
-        }
-
-        return null;
-    }
+    public Item GetItemWithoutRemove(string _itemID) => _cells.Find((_cell) => { return _cell.CellID == _itemID; }).Item;
+    public Item GetItemFromSpecificCellWithoutRemove(int _cellIndex) => _cellIndex >= _cells.Count ? null : _cells[_cellIndex].Item;
 
     public Item GetItemFromSpecificCell(int _cellIndex)
     {
         if (_cellIndex >= _cells.Count || _cells[_cellIndex].ItemNumber < 1) return null;
 
         Item _item = _cells[_cellIndex].Item;
-        _cells[_cellIndex].ItemNumber--;
-        if (_cells[_cellIndex].ItemNumber < 1)
-        {
-            _cells[_cellIndex] = new InventoryCell();
+        ChangeItemNumberInCell(_cellIndex, -1);
 
-        }
-
-        OnCellChanged?.Invoke(_cellIndex, _cells[_cellIndex]);
         return _item;
     }
 
-    public Item GetAllItemsFromSpecificCell(int _cellIndex, out int itemsNumber)
+    public Item GetAllItemsFromSpecificCell(int _cellIndex, out int _itemsNumber)
     {
-        itemsNumber = 0;
+        _itemsNumber = 0;
         if (_cellIndex >= _cells.Count || _cells[_cellIndex].ItemNumber < 1) return null;
 
-        itemsNumber = _cells[_cellIndex].ItemNumber;
+        _itemsNumber = _cells[_cellIndex].ItemNumber;
         Item _item = _cells[_cellIndex].Item;
-        _cells[_cellIndex] = new InventoryCell();
+        ReplaceCell(_cellIndex, new InventoryCell());
 
-        OnCellChanged?.Invoke(_cellIndex, _cells[_cellIndex]);
         return _item;
     }
 }

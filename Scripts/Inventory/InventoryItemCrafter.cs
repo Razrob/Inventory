@@ -22,11 +22,12 @@ public class InventoryItemCrafter : MonoBehaviour
 
     private Transform _lastPage;
 
-    
+    private List<UIRecipeCell> _recipeCells = new List<UIRecipeCell>();
 
     private void Start()
     {
         _inventoryHandler.OnInventoryDisplayChanged += (_enabled) => { if (!_enabled) _activeRecipe = null; };
+        _inventoryDisplay.OnCraftListPageChanged += UpdateRecipeCells;
 
         InputModule.InputModuleInstance.OnMouseButtonUp += PutCraftedItem;
         InputModule.InputModuleInstance.OnMouseButtonDrag += Drag;
@@ -48,12 +49,12 @@ public class InventoryItemCrafter : MonoBehaviour
         }
 
         UIRecipeCell _cell = Instantiate(_cellPrefab, _lastPage);
+        _recipeCells.Add(_cell);
         _cell.CraftRecipe = _recipe;
 
         _cell.ItemImage.sprite = _recipe.ReceivedItem.Item.ItemSprite;
         if(_recipe.ReceivedItem.ItemNumber > 1) _cell.ItemNumberUI.text = _recipe.ReceivedItem.ItemNumber.ToString();
-
-        if (_inventoryHandler.ItemStorage.CheckRecipeAvailability(_recipe)) _cell.CraftAvailabilityPanel.SetActive(false);
+        
 
         EventTrigger trigger = _cell.GetComponent<EventTrigger>();
 
@@ -61,27 +62,22 @@ public class InventoryItemCrafter : MonoBehaviour
 
     }
 
-    private void PutCraftedItem(BaseEventData _eventData)
+    private void PutCraftedItem(PointerEventData _data)
     {
-        PointerEventData _data = (PointerEventData)_eventData;
-
         if (_freeCellData == null) return;
 
-        if (_data.pointerCurrentRaycast.gameObject == null) ThrowItems();
-        else
+        if (_data.pointerCurrentRaycast.gameObject != null)
         {
             if (_data.pointerCurrentRaycast.gameObject.TryGetComponent(out UICell cell))
             {
                 int _cellIndex = _inventoryDisplay.GetCellIndexInArray(cell);
-                if (_cellIndex == -1) ThrowItems();
-                else
+                if (_cellIndex != -1)
                 {
-                    _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _cellIndex, _freeCellData.InventoryCell.ItemNumber);
-                    if (_freeCellData.InventoryCell.ItemNumber > 0) ThrowItems();
+                    _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.TryAddItemInSpecificCell(_freeCellData.InventoryCell.Item, _cellIndex, _freeCellData.InventoryCell.ItemNumber);
                 }
             }
-            else ThrowItems();
         }
+
         FinishMove();
 
     }
@@ -91,17 +87,39 @@ public class InventoryItemCrafter : MonoBehaviour
     }
     private void FinishMove()
     {
+        if (_freeCellData.InventoryCell.ItemNumber > 0) _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.ItemStorage.TryAddItems(_freeCellData.InventoryCell.Item, _freeCellData.InventoryCell.ItemNumber);
+        if (_freeCellData.InventoryCell.ItemNumber > 0) ThrowItems();
+
         if (_freeCellData != null) Destroy(_freeCellData.UICell.gameObject);
         _freeCellData = null;
     }
 
-    public void RefreshVisibleRecipes()
+    private void UpdateRecipeCells(int _activePageIndex)
     {
+        _activePageIndex++;
+        for (int i = _activePageIndex * 12 - 12; i <= _activePageIndex * 12 - 1; i++)
+        {
+            if (i >= _recipeCells.Count) break;
+            if (_inventoryHandler.ItemStorage.CheckRecipeAvailability(_recipeCells[i].CraftRecipe))
+                _recipeCells[i].CraftAvailabilityPanel.SetActive(false);
+        }
+    }
+
+    private void ResetOldCells()
+    {
+        if (!_inventoryHandler.InventoryActive) return;
         List<GameObject> objectsForDestroy = new List<GameObject>();
         for (int i = 0; i < _craftListParent.childCount; i++) objectsForDestroy.Add(_craftListParent.GetChild(i).gameObject);
         for (int i = 0; i < objectsForDestroy.Count; i++) DestroyImmediate(objectsForDestroy[i]);
         _inventoryDisplay.ClearCraftListPages();
         _lastPage = null;
+        _recipeCells.Clear();
+
+    }
+
+    public void RefreshVisibleRecipes()
+    {
+        ResetOldCells();
 
         foreach (CraftRecipe _recipe in _craftsList.CraftRecipes)
         {
@@ -128,22 +146,31 @@ public class InventoryItemCrafter : MonoBehaviour
         _activeRecipe = _recipe.CraftRecipe;
 
         _inventoryDisplay.DisplayRecipeInfoPanel(ref _activeRecipe, _inventoryHandler.ItemStorage.CheckRecipeAvailability(_activeRecipe));
-
     }
 
     public void CraftItem(BaseEventData _eventData)
     {
         PointerEventData _data = (PointerEventData)_eventData;
+
         if (_activeRecipe == null || !_inventoryHandler.ItemStorage.CheckRecipeAvailability(_activeRecipe) || _freeCellData != null) return;
 
         Transform _freeCellTransform = Instantiate(_freeCellPrefab, transform.parent).transform;
 
+        int _itemsNumber = 1;
+        Item _item;
+
+        if (_data.button == _inventoryHandler.InventoryProperty.ButtonForMoveStackItems) _item = _inventoryHandler.CraftAllItems(_activeRecipe, out _itemsNumber);
+        else if (_data.button == _inventoryHandler.InventoryProperty.ButtonForMoveOneItem) _item = _inventoryHandler.CraftItem(_activeRecipe);
+        else return;
+
         _freeCellData = new FreeCellData
         {
-            InventoryCell = new InventoryCell(Instantiate(_inventoryHandler.CraftItem(_activeRecipe))),
+            InventoryCell = new InventoryCell(Instantiate(_item)),
             UICell = _freeCellTransform.GetComponent<UICell>(),
             RectTransform = _freeCellTransform.GetComponent<RectTransform>()
         };
+
+        _freeCellData.InventoryCell.ItemNumber = _itemsNumber;
 
         if (!_freeCellData.InventoryCell.Item.IsWearable && _freeCellData.InventoryCell.ItemNumber > 1) _freeCellData.UICell.ItemNumberUI.text = _freeCellData.InventoryCell.ItemNumber.ToString();
         _freeCellData.UICell.ItemImage.sprite = _freeCellData.InventoryCell.Item.ItemSprite;

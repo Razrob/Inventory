@@ -7,9 +7,6 @@ using UnityEngine.UI;
 public class InventoryCellDragger : MonoBehaviour
 {
 
-    [SerializeField] private PointerEventData.InputButton _buttonForMoveOneItem;
-    [SerializeField] private PointerEventData.InputButton _buttonForMoveStackItems;
-
     [SerializeField] private InventoryHandler _inventoryHandler;
     [SerializeField] private InventoryDisplay _inventoryDisplay;
     [SerializeField] private UICell _draggingCellPrefab;
@@ -27,7 +24,7 @@ public class InventoryCellDragger : MonoBehaviour
     }
     private void FinishMove()
     {
-        if (_freeCellData.InventoryCell.ItemNumber > 0) _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(_freeCellData.EditableUICell), _freeCellData.InventoryCell.ItemNumber);
+        if (_freeCellData.InventoryCell.ItemNumber > 0) _inventoryHandler.TryAddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(_freeCellData.EditableUICell), _freeCellData.InventoryCell.ItemNumber);
 
         if (_freeCellData != null) Destroy(_freeCellData.FreeUICell.gameObject);
         _freeCellData = null;
@@ -45,7 +42,7 @@ public class InventoryCellDragger : MonoBehaviour
     {
         PointerEventData _data = (PointerEventData)_eventData;
 
-        if (_freeCellData != null || (_data.button != _buttonForMoveOneItem && _data.button != _buttonForMoveStackItems)) return;
+        if (_freeCellData != null || (_data.button != _inventoryHandler.InventoryProperty.ButtonForMoveOneItem && _data.button != _inventoryHandler.InventoryProperty.ButtonForMoveStackItems)) return;
 
         UICell _selectedCell = _data.pointerCurrentRaycast.gameObject.transform.GetComponent<UICell>();
 
@@ -54,8 +51,9 @@ public class InventoryCellDragger : MonoBehaviour
 
         int _itemsNumber = 1;
 
-        if (_data.button == _buttonForMoveStackItems) _item = _inventoryHandler.ItemStorage.GetAllItemsFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell), out _itemsNumber);
-        else _item = _inventoryHandler.ItemStorage.GetItemFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell));
+        if (_data.button == _inventoryHandler.InventoryProperty.ButtonForMoveStackItems) _item = _inventoryHandler.ItemStorage.GetAllItemsFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell), out _itemsNumber);
+        else if (_data.button == _inventoryHandler.InventoryProperty.ButtonForMoveOneItem) _item = _inventoryHandler.ItemStorage.GetItemFromSpecificCell(_inventoryDisplay.GetCellIndexInArray(_selectedCell));
+        else return;
 
         Transform _freeCellTransform = Instantiate(_draggingCellPrefab, _data.position, Quaternion.identity, transform).transform;
 
@@ -91,7 +89,7 @@ public class InventoryCellDragger : MonoBehaviour
         {
             if (_data.pointerCurrentRaycast.gameObject.TryGetComponent(out UICell cell))
             {
-                _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.AddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(cell), _freeCellData.InventoryCell.ItemNumber);
+                _freeCellData.InventoryCell.ItemNumber = _inventoryHandler.TryAddItemInSpecificCell(_freeCellData.InventoryCell.Item, _inventoryDisplay.GetCellIndexInArray(cell), _freeCellData.InventoryCell.ItemNumber);
             }
             FinishMove();
         }

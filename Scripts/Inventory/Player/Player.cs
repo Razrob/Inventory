@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
     private Camera _camera;
 
     [SerializeField] private InventoryHandler _inventoryHandler;
+    [SerializeField] private ActiveInventoryHandler _activeInventoryHandler;
 
     private void Start()
     {
@@ -24,6 +25,11 @@ public class Player : MonoBehaviour
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.E)) _inventoryHandler.SetInventoryDisplay(!_inventoryHandler.InventoryActive);
+        if (Input.GetKeyDown(KeyCode.Q) && !_inventoryHandler.InventoryActive)
+        {
+            if(Input.GetKey(KeyCode.LeftControl)) _activeInventoryHandler.ThrowAllSelectedItems();
+            else _activeInventoryHandler.ThrowSelectedItem();
+        }
 
         if (!_inventoryHandler.InventoryActive)
         {
@@ -46,7 +52,7 @@ public class Player : MonoBehaviour
                 {
                     if (hit.transform.TryGetComponent(out Item _item))
                     {
-                        _inventoryHandler.AddItem(_item);
+                        _inventoryHandler.TryAddItems(_item);
                     }
                 }
             }
