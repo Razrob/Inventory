@@ -12,7 +12,6 @@ public class InventoryHandler : MonoBehaviour
     [SerializeField] private Item[] items;
     [SerializeField] private int _storageCapacity = 16;
 
-    public event Action<bool> OnInventoryDisplayChanged;
 
     private ItemStorage _itemStorage;
     private bool _inventoryActive;
@@ -22,6 +21,7 @@ public class InventoryHandler : MonoBehaviour
     public InventoryDisplay InventoryDisplay => _inventoryDisplay;
     public InventoryProperty InventoryProperty => _inventoryProperty;
 
+    public event Action<bool> OnInventoryDisplayChanged;
 
     private void Awake()
     { 
@@ -35,7 +35,7 @@ public class InventoryHandler : MonoBehaviour
         //{
         //    TryAddItems(items[UnityEngine.Random.Range(0, items.Length)]);
         //}
-        //TryAddItems(items[UnityEngine.Random.Range(0, items.Length)], 23);
+        TryAddItems(items[UnityEngine.Random.Range(0, items.Length)], 23);
     }
 
     private void CreateThrowedObject(Item _item)
